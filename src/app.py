@@ -12,7 +12,7 @@ async def get_toc(file: UploadFile = File(...)):
         service_logger.info(f"Processing file: {file.filename}")
         file_content = file.file.read()
         response = requests.post(
-            "http://pdf-layout-analysis:5060/", files={"file": (file.filename, file_content, file.content_type)}
+            "http://pdf-document-layout-analysis-toc:5060/", files={"file": (file.filename, file_content, file.content_type)}
         )
         return extract_table_of_contents(file_content, response.json())
     except requests.RequestException as e:
@@ -25,7 +25,7 @@ async def get_toc_fast(file: UploadFile = File(...)):
         service_logger.info(f"Processing file: {file.filename}")
         file_content = file.file.read()
         response = requests.post(
-            "http://pdf-layout-analysis:5060/fast", files={"file": (file.filename, file_content, file.content_type)}
+            "http://pdf-document-layout-analysis-toc:5060/fast", files={"file": (file.filename, file_content, file.content_type)}
         )
         return extract_table_of_contents(file_content, response.json())
     except requests.RequestException as e:

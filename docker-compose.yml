@@ -1,6 +1,6 @@
 services:
-  pdf-layout-analysis:
-    container_name: pdf-layout-analysis
+  pdf-document-layout-analysis-toc:
+    container_name: pdf-document-layout-analysis-toc
     entrypoint: [ "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--chdir", "./src", "app:app", "--bind", "0.0.0.0:5060", "--timeout", "10000"]
     image: ghcr.io/huridocs/pdf-document-layout-analysis:latest
     init: true
@@ -20,7 +20,7 @@ services:
     ports:
       - "5070:5070"
     depends_on:
-      - pdf-layout-analysis
+      - pdf-document-layout-analysis-toc
     networks:
       - pdf-table-of-contents-network
 networks:

@@ -1,8 +1,8 @@
 services:
-  pdf-layout-analysis:
+  pdf-document-layout-analysis-toc:
     extends:
       file: docker-compose.yml
-      service: pdf-layout-analysis
+      service: pdf-document-layout-analysis-toc
     deploy:
       resources:
         reservations:
