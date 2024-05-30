@@ -40,7 +40,6 @@ def get_pdf_segments_from_segment_boxes(pdf_features: PdfFeatures, segment_boxes
 def extract_table_of_contents(file: AnyStr, segment_boxes: list[dict]):
     service_logger.info("Getting TOC")
     pdf_path = pdf_content_to_pdf_path(file)
-    service_logger.info(f"PDF PATH: {pdf_path}")
     pdf_features: PdfFeatures = PdfFeatures.from_pdf_path(pdf_path)
     pdf_segments: list[PdfSegment] = get_pdf_segments_from_segment_boxes(pdf_features, segment_boxes)
     title_segments = [segment for segment in pdf_segments if segment.segment_type in title_types]
