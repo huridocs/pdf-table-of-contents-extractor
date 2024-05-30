@@ -34,12 +34,24 @@ To stop the server:
 
 ## Requirements
 * 4 GB RAM memory
+* 6 GB GPU memory (if not, it will run with CPU)
 
 ## Usage
 
 As we mentioned at the [Quick Start](#quick-start), you can use the service simply like this:
 
     curl -X POST -F 'file=@/PATH/TO/PDF/pdf_name.pdf' localhost:5070
+
+
+Also, if you want to get the results faster (but with slightly worse results) you can run this command:
+
+
+    curl -X POST -F 'file=@/PATH/TO/PDF/pdf_name.pdf' localhost:5070/fast
+
+
+For more information about models, check this [link](https://github.com/huridocs/pdf-document-layout-analysis#models).
+
+
 
 When the process is done, the output will include a list of TOCItem elements and, every TOCItem element will has this information:
 
