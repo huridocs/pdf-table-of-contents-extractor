@@ -1,0 +1,25 @@
+services:
+  pdf-layout-analysis:
+    extends:
+      file: docker-compose.yml
+      service: pdf-layout-analysis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    networks:
+      - pdf-table-of-contents-network
+
+  pdf-table-of-contents-extraction:
+    extends:
+      file: docker-compose.yml
+      service: pdf-table-of-contents-extraction
+    networks:
+      - pdf-table-of-contents-network
+
+networks:
+  pdf-table-of-contents-network:
+    driver: bridge

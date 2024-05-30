@@ -1,0 +1,28 @@
+services:
+  pdf-layout-analysis:
+    container_name: pdf-layout-analysis
+    entrypoint: [ "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--chdir", "./src", "app:app", "--bind", "0.0.0.0:5060", "--timeout", "10000"]
+    image: ghcr.io/huridocs/pdf-document-layout-analysis:latest
+    init: true
+    restart: unless-stopped
+    ports:
+      - "5060:5060"
+    networks:
+      - pdf-table-of-contents-network
+  pdf-table-of-contents-extraction:
+    container_name: pdf-table-of-contents-extraction
+    entrypoint: [ "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--chdir", "./src", "app:app", "--bind", "0.0.0.0:5070", "--timeout", "10000"]
+    init: true
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5070:5070"
+    depends_on:
+      - pdf-layout-analysis
+    networks:
+      - pdf-table-of-contents-network
+networks:
+  pdf-table-of-contents-network:
+    driver: bridge
