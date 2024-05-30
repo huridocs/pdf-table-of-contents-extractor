@@ -1,0 +1,3 @@
+git+https://github.com/huridocs/pdf-tokens-type-labeler
+git+https://github.com/huridocs/pdf_paragraphs_extraction
+roman
