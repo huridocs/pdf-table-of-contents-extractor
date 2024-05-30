@@ -28,11 +28,11 @@ def pdf_content_to_pdf_path(file_content):
 def get_pdf_segments_from_segment_boxes(pdf_features: PdfFeatures, segment_boxes: list[dict]) -> list[PdfSegment]:
     pdf_segments: list[PdfSegment] = []
     for segment_box in segment_boxes:
-        left, top, width, height = segment_box['left'], segment_box['top'], segment_box['width'], segment_box['height']
+        left, top, width, height = segment_box["left"], segment_box["top"], segment_box["width"], segment_box["height"]
         bounding_box = Rectangle.from_width_height(left, top, width, height)
-        segment_type = TokenType.from_text(segment_box['type'])
+        segment_type = TokenType.from_text(segment_box["type"])
         pdf_name = pdf_features.file_name
-        segment = PdfSegment(segment_box['page_number'], bounding_box, segment_box['text'], segment_type, pdf_name)
+        segment = PdfSegment(segment_box["page_number"], bounding_box, segment_box["text"], segment_type, pdf_name)
         pdf_segments.append(segment)
     return pdf_segments
 

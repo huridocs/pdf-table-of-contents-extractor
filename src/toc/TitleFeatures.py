@@ -77,15 +77,18 @@ class TitleFeatures:
             4: lambda x_list: len(x_list) == len([letter for letter in x_list if letter == letter.upper()]),
         }
 
-        self.first_characters_type = next((index for index, type_checker in characters_checker.items()
-                                           if type_checker(clean_first_characters)), 0)
+        self.first_characters_type = next(
+            (index for index, type_checker in characters_checker.items() if type_checker(clean_first_characters)), 0
+        )
 
         self.bullet_points_type = (
             self.SPECIAL_MARKERS.index(self.first_characters[-1]) + 1
             if self.first_characters[-1] in self.SPECIAL_MARKERS
             else 0
         )
-        self.first_characters_special_markers_count = len([x for x in self.first_characters[:-1] if x in self.SPECIAL_MARKERS])
+        self.first_characters_special_markers_count = len(
+            [x for x in self.first_characters[:-1] if x in self.SPECIAL_MARKERS]
+        )
 
     def process_font_properties(self):
         self.font_family = self.segment_tokens[0].font.font_id
@@ -103,7 +106,7 @@ class TitleFeatures:
         self.bottom = max(token.bounding_box.left + token.bounding_box.width for token in self.segment_tokens)
         self.line_height = self.segment_tokens[0].font.font_size
 
-        page_width = self.pdf_features.pages[self.pdf_segment.page_number-1].page_width
+        page_width = self.pdf_features.pages[self.pdf_segment.page_number - 1].page_width
         self.text_centered = 1 if abs(self.left - (page_width - self.right)) < 10 else 0
         self.is_left = self.left < page_width - self.right if not self.text_centered else False
         self.indentation = int((self.left - self.modes.left_space_mode) / 15) if self.is_left else -1
@@ -120,7 +123,7 @@ class TitleFeatures:
             1 if self.italics else 0,
             self.first_characters_type,
             self.first_characters_special_markers_count,
-            self.bullet_points_type
+            self.bullet_points_type,
             # self.text_centered,
             # self.is_left,
             # self.indentation
@@ -185,7 +188,9 @@ class TitleFeatures:
         other_segment = other_title_features.pdf_segment
         merged_bounding_box = Rectangle.merge_rectangles([self.pdf_segment.bounding_box, other_segment.bounding_box])
         merged_content = self.pdf_segment.text_content + other_segment.text_content
-        merged_segment = PdfSegment(self.pdf_segment.page_number, merged_bounding_box, merged_content, self.pdf_segment.segment_type)
+        merged_segment = PdfSegment(
+            self.pdf_segment.page_number, merged_bounding_box, merged_content, self.pdf_segment.segment_type
+        )
         return TitleFeatures(pdf_segment=merged_segment, pdf_features=self.pdf_features, modes=self.modes)
 
     def get_one_token(self):

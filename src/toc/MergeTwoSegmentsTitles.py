@@ -21,7 +21,9 @@ class MergeTwoSegmentsTitles:
                 index += 1
                 continue
 
-            self.title_features_sorted[index + 1] = self.title_features_sorted[index + 1].append(self.title_features_sorted[index])
+            self.title_features_sorted[index + 1] = self.title_features_sorted[index + 1].append(
+                self.title_features_sorted[index]
+            )
             index += 1
 
     @staticmethod
