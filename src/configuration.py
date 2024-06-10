@@ -6,6 +6,7 @@ SRC_PATH = Path(__file__).parent.absolute()
 ROOT_PATH = Path(__file__).parent.parent.absolute()
 
 title_types = {TokenType.TITLE, TokenType.SECTION_HEADER}
+skip_types = {TokenType.TITLE, TokenType.SECTION_HEADER, TokenType.PAGE_HEADER, TokenType.PICTURE}
 
 handlers = [logging.StreamHandler()]
 logging.root.handlers = []

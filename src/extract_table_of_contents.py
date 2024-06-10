@@ -8,7 +8,7 @@ from pdf_features.PdfFeatures import PdfFeatures
 from pdf_features.Rectangle import Rectangle
 from pdf_token_type_labels.TokenType import TokenType
 from TOCExtractor import TOCExtractor
-from configuration import service_logger, title_types
+from configuration import service_logger, title_types, skip_types
 from toc.PdfSegmentation import PdfSegmentation
 
 
@@ -25,6 +25,26 @@ def pdf_content_to_pdf_path(file_content):
     return pdf_path
 
 
+def skip_name_of_the_document(pdf_segments: list[PdfSegment], title_segments: list[PdfSegment]):
+    segments_to_remove = []
+    last_segment = None
+    for segment in pdf_segments:
+        if segment.segment_type not in skip_types:
+            break
+        if segment.segment_type == TokenType.PAGE_HEADER or segment.segment_type == TokenType.PICTURE:
+            continue
+        if not last_segment:
+            last_segment = segment
+        else:
+            if segment.bounding_box.right < last_segment.bounding_box.left + last_segment.bounding_box.width * 0.66:
+                break
+            last_segment = segment
+        if segment.segment_type in title_types:
+            segments_to_remove.append(segment)
+    for segment in segments_to_remove:
+        title_segments.remove(segment)
+
+
 def get_pdf_segments_from_segment_boxes(pdf_features: PdfFeatures, segment_boxes: list[dict]) -> list[PdfSegment]:
     pdf_segments: list[PdfSegment] = []
     for segment_box in segment_boxes:
@@ -37,12 +57,14 @@ def get_pdf_segments_from_segment_boxes(pdf_features: PdfFeatures, segment_boxes
     return pdf_segments
 
 
-def extract_table_of_contents(file: AnyStr, segment_boxes: list[dict]):
+def extract_table_of_contents(file: AnyStr, segment_boxes: list[dict], skip_document_name=False):
     service_logger.info("Getting TOC")
     pdf_path = pdf_content_to_pdf_path(file)
     pdf_features: PdfFeatures = PdfFeatures.from_pdf_path(pdf_path)
     pdf_segments: list[PdfSegment] = get_pdf_segments_from_segment_boxes(pdf_features, segment_boxes)
     title_segments = [segment for segment in pdf_segments if segment.segment_type in title_types]
+    if skip_document_name:
+        skip_name_of_the_document(pdf_segments, title_segments)
     pdf_segmentation: PdfSegmentation = PdfSegmentation(pdf_features, title_segments)
     toc_instance: TOCExtractor = TOCExtractor(pdf_segmentation)
     return toc_instance.to_dict()
