@@ -1,12 +1,9 @@
 import string
 import roman
 import numpy as np
-from pdf_features.PdfFeatures import PdfFeatures
-from pdf_features.PdfFont import PdfFont
 from paragraph_extraction_trainer.PdfSegment import PdfSegment
 from pdf_features.PdfToken import PdfToken
 from pdf_features.Rectangle import Rectangle
-from pdf_token_type_labels.TokenType import TokenType
 from src.data.SegmentBox import SegmentBox
 from src.toc.data.TOCItem import TOCItem
 from src.toc.methods.two_models_v3_segments_context_2.Modes import Modes
@@ -21,12 +18,12 @@ class TitleFeatures:
     ROMAN_NUMBERS_LOWERCASE = [x.lower() for x in ROMAN_NUMBERS]
     BULLET_POINTS = [ALPHABET, ALPHABET_UPPERCASE, ROMAN_NUMBERS, ROMAN_NUMBERS_LOWERCASE]
 
-    def __init__(self, pdf_segment: PdfSegment, pdf_features: PdfFeatures, modes: Modes):
+    def __init__(self, pdf_segment: PdfSegment, segment_tokens: list[PdfToken], pdf_features, modes: Modes):
         self.modes = modes
         self.pdf_segment = pdf_segment
         self.pdf_features = pdf_features
 
-        self.segment_tokens: list[PdfToken] = []
+        self.segment_tokens: list[PdfToken] = segment_tokens
         self.first_characters: str = ""
         self.first_characters_special_markers_count: int = 0
         self.font_size: float = 0.0
@@ -43,25 +40,15 @@ class TitleFeatures:
         self.text_centered: int = 0
         self.is_left: bool = False
         self.indentation: int = -1
-        self.left: int = 0
-        self.right: int = 0
-        self.top: int = 0
-        self.bottom: int = 0
+        self.left: int = self.pdf_segment.bounding_box.left
+        self.top: int = self.pdf_segment.bounding_box.top
+        self.right: int = self.pdf_segment.bounding_box.right
+        self.bottom: int = self.pdf_segment.bounding_box.bottom
 
-        self.initialize_segment_tokens()
         self.initialize_text_properties()
         self.process_first_characters()
         self.process_font_properties()
         self.process_positional_properties()
-
-    def initialize_segment_tokens(self):
-        self.segment_tokens: list[PdfToken] = [
-            pdf_token
-            for page, pdf_token in self.pdf_features.loop_tokens()
-            if self.pdf_segment.page_number == pdf_token.page_number
-            and pdf_token.bounding_box.get_intersection_percentage(self.pdf_segment.bounding_box) > 50
-        ]
-        self.segment_tokens = self.segment_tokens if self.segment_tokens else [self.get_one_token()]
 
     def initialize_text_properties(self):
         words = [token.content for token in self.segment_tokens]
@@ -100,12 +87,7 @@ class TitleFeatures:
         self.font_size = np.mean(font_sizes)
 
     def process_positional_properties(self):
-        self.left = min(token.bounding_box.left for token in self.segment_tokens)
-        self.top = min(token.bounding_box.top for token in self.segment_tokens)
-        self.right = max(token.bounding_box.left + token.bounding_box.width for token in self.segment_tokens)
-        self.bottom = max(token.bounding_box.left + token.bounding_box.width for token in self.segment_tokens)
         self.line_height = self.segment_tokens[0].font.font_size
-
         page_width = self.pdf_features.pages[self.pdf_segment.page_number - 1].page_width
         self.text_centered = 1 if abs(self.left - (page_width - self.right)) < 10 else 0
         self.is_left = self.left < page_width - self.right if not self.text_centered else False
@@ -168,11 +150,9 @@ class TitleFeatures:
     def from_pdf_segmentation(pdf_segmentation: PdfSegmentation) -> list["TitleFeatures"]:
         titles_features = list()
         modes = Modes(pdf_features=pdf_segmentation.pdf_features)
-        for pdf_segment, title_prediction in pdf_segmentation.loop_predictions():
-            # if title_prediction < 0.5:
-            #     continue
-
-            titles_features.append(TitleFeatures(pdf_segment, pdf_segmentation.pdf_features, modes))
+        for pdf_segment in pdf_segmentation.pdf_segments:
+            segment_tokens = pdf_segmentation.tokens_by_segments[pdf_segment]
+            titles_features.append(TitleFeatures(pdf_segment, segment_tokens, pdf_segmentation.pdf_features, modes))
 
         return titles_features
 
@@ -191,12 +171,5 @@ class TitleFeatures:
         merged_segment = PdfSegment(
             self.pdf_segment.page_number, merged_bounding_box, merged_content, self.pdf_segment.segment_type
         )
-        return TitleFeatures(pdf_segment=merged_segment, pdf_features=self.pdf_features, modes=self.modes)
-
-    def get_one_token(self):
-        for page, token in self.pdf_features.loop_tokens():
-            return token
-
-        font = PdfFont("font_id", False, False, 0, "#000000")
-        bounding_box = Rectangle(0, 0, 0, 0)
-        return PdfToken(0, "0", "", font, 0, bounding_box, TokenType.TEXT)
+        segment_tokens = self.segment_tokens + other_title_features.segment_tokens
+        return TitleFeatures(merged_segment, segment_tokens, pdf_features=self.pdf_features, modes=self.modes)
